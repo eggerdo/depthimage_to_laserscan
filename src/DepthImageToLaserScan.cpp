@@ -122,17 +122,25 @@ sensor_msgs::LaserScanPtr DepthImageToLaserScan::convert_msg(const sensor_msgs::
     throw std::runtime_error(ss.str());
   }
 
+  int scan_center_px = scan_center_/100.0 * depth_msg->height;
+  if(scan_center_px - scan_height_/2 < 0 || scan_center_px > depth_msg->height - scan_height_/2)
+  {
+    std::stringstream ss;
+    ss << "scan_center ( " << scan_center_px << " pixels) is out of bounds for scan_height ( " << scan_height_ << " pixels)"; 
+    throw std::runtime_error(ss.str());
+  }
+
   // Calculate and fill the ranges
   uint32_t ranges_size = depth_msg->width;
   scan_msg->ranges.assign(ranges_size, std::numeric_limits<float>::quiet_NaN());
   
   if (depth_msg->encoding == sensor_msgs::image_encodings::TYPE_16UC1)
   {
-    convert<uint16_t>(depth_msg, cam_model_, scan_msg, scan_height_);
+    convert<uint16_t>(depth_msg, cam_model_, scan_msg, scan_center_, scan_height_);
   }
   else if (depth_msg->encoding == sensor_msgs::image_encodings::TYPE_32FC1)
   {
-    convert<float>(depth_msg, cam_model_, scan_msg, scan_height_);
+    convert<float>(depth_msg, cam_model_, scan_msg, scan_center_, scan_height_);
   }
   else
   {
@@ -155,6 +163,10 @@ void DepthImageToLaserScan::set_range_limits(const float range_min, const float 
 
 void DepthImageToLaserScan::set_scan_height(const int scan_height){
   scan_height_ = scan_height;
+}
+
+void DepthImageToLaserScan::set_scan_center(const int scan_center){
+  scan_center_ = scan_center;
 }
 
 void DepthImageToLaserScan::set_output_frame(const std::string output_frame_id){

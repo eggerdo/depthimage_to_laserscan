@@ -101,7 +101,9 @@ namespace depthimage_to_laserscan
      * 
      */
     void set_scan_height(const int scan_height);
-    
+
+    void set_scan_center(const int scan_center);
+
     /**
      * Sets the frame_id for the output LaserScan.
      * 
@@ -168,7 +170,7 @@ namespace depthimage_to_laserscan
     */
     template<typename T>
     void convert(const sensor_msgs::ImageConstPtr& depth_msg, const image_geometry::PinholeCameraModel& cam_model, 
-		 const sensor_msgs::LaserScanPtr& scan_msg, const int& scan_height) const{
+		 const sensor_msgs::LaserScanPtr& scan_msg, const int& scan_center, const int& scan_height) const{
       // Use correct principal point from calibration
       float center_x = cam_model.cx();
       float center_y = cam_model.cy();
@@ -181,7 +183,8 @@ namespace depthimage_to_laserscan
       const T* depth_row = reinterpret_cast<const T*>(&depth_msg->data[0]);
       int row_step = depth_msg->step / sizeof(T);
 
-      int offset = (int)(cam_model.cy()-scan_height/2);
+      int scan_center_px = (int)(scan_center/100.0 * (depth_msg->height-1));
+      int offset = (int)(scan_center_px - scan_height/2);
       depth_row += offset*row_step; // Offset to center of image
 
       for(int v = offset; v < offset+scan_height_; v++, depth_row += row_step){
@@ -216,6 +219,7 @@ namespace depthimage_to_laserscan
     float range_min_; ///< Stores the current minimum range to use.
     float range_max_; ///< Stores the current maximum range to use.
     int scan_height_; ///< Number of pixel rows to use when producing a laserscan from an area.
+    int scan_center_;
     std::string output_frame_id_; ///< Output frame_id for each laserscan.  This is likely NOT the camera's frame_id.
   };
   
