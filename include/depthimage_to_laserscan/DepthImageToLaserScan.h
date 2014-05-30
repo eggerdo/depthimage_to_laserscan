@@ -101,7 +101,16 @@ namespace depthimage_to_laserscan
      * 
      */
     void set_scan_height(const int scan_height);
-
+ 
+    /**
+     * Sets the center of image rows to use in the output LaserScan.
+     * 
+     * scan_center is defined as a percentage of the depth image height and is used to determine the index of the center row 
+     * to use in the output. The output will then be computed from the `scan_height` number of pixels centered around this row.
+     * 
+     * @param scan_height Percentage of the depth image height to determine the center of the rows to use to compress into the LaserScan
+     * 
+     */
     void set_scan_center(const int scan_center);
 
     /**
@@ -183,9 +192,11 @@ namespace depthimage_to_laserscan
       const T* depth_row = reinterpret_cast<const T*>(&depth_msg->data[0]);
       int row_step = depth_msg->step / sizeof(T);
 
+      // calculate the index of center row ...
       int scan_center_px = (int)(scan_center/100.0 * (depth_msg->height-1));
+      // ... then use the center row to calculate the offset
       int offset = (int)(scan_center_px - scan_height/2);
-      depth_row += offset*row_step; // Offset to center of image
+      depth_row += offset*row_step; // Offset to center row
 
       for(int v = offset; v < offset+scan_height_; v++, depth_row += row_step){
 		for (int u = 0; u < (int)depth_msg->width; u++) // Loop over each pixel in row

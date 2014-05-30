@@ -122,6 +122,7 @@ sensor_msgs::LaserScanPtr DepthImageToLaserScan::convert_msg(const sensor_msgs::
     throw std::runtime_error(ss.str());
   }
 
+  // check that the band [scan_center - scan_height/2, scan_center + scan_height/2] is not out of image bounds
   int scan_center_px = scan_center_/100.0 * depth_msg->height;
   if(scan_center_px - scan_height_/2 < 0 || scan_center_px > depth_msg->height - scan_height_/2)
   {
